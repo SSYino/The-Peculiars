@@ -14,5 +14,5 @@ export default async (msg: any, client: any) : Promise<void> => {
         }
 
     ]);
-    await msg.reply('Deployed!');
+    await msg.reply("🥷 | Deployed");
 }
