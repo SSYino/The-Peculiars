@@ -20,13 +20,13 @@ client.on('ready', async () => {
 
     console.log('All Bot Commands are ready to be used')
 })
-client.on('messageCreate', (message) => {
+client.on('messageCreate', async (message) => {
     //Test Send Message
     // if (message.content.toLowerCase() === 'shinchan') { message.channel.send("GAY!") }
 
     // Deployment Message
-    if (message.content.toLowerCase() === `${process.env.PREFIX}deploy`) {
-        deploySlashCommands(message, client);
+    if (message.content.toLowerCase() === `${process.env.PREFIX} deploy`) {
+        await deploySlashCommands(message, client);
     }
 
     //Check messages for commands
