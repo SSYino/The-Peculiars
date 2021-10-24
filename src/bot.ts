@@ -1,6 +1,7 @@
 require("dotenv").config();
 // const { PrismaClient } = require('@prisma/client')
-import { Client, Intents, GuildMember } from 'discord.js'
+import { Client, Intents, GuildMember } from 'discord.js';
+import deploySlashCommands  from './slashCommands';
 // const prisma = new PrismaClient()
 const client = new Client({
     partials: ['MESSAGE', 'USER', 'GUILD_MEMBER', 'REACTION'],
@@ -9,10 +10,10 @@ const client = new Client({
 });
 
 client.on('ready', async () => {
-    console.log(`Bot has logged in as ${client.user.tag}`)
+    console.log(`Bot has logged in as ${client.user!.tag}`)
 
     //Set Activity Status
-    client.user.setActivity('for a Spy', { type: 'WATCHING' })
+    client.user!.setActivity('for a Spy', { type: 'WATCHING' })
 
     //Send Message To Channel
     // client.channels.cache.get("886996891865333811").send('Yeah fuck you Knyu');
@@ -24,7 +25,9 @@ client.on('messageCreate', (message) => {
     // if (message.content.toLowerCase() === 'shinchan') { message.channel.send("GAY!") }
 
     // Deployment Message
-    // if (message.content)
+    if (message.content.toLowerCase() === `${process.env.PREFIX}deploy`) {
+        deploySlashCommands(message, client);
+    }
 
     //Check messages for commands
     // msgCheck(message, prisma, client, player)
