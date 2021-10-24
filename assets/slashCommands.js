@@ -8,6 +8,10 @@ module.exports = async (msg, client) => {
             name: 'start',
             description: 'Starts the spy game "The Peculiars"',
         },
+        {
+            name: 'end',
+            description: 'Ends the spy game "The Peculiars"'
+        }
         
     ]);
     await msg.reply('Deployed!');
