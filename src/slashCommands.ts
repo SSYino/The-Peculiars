@@ -1,4 +1,4 @@
-module.exports = async (msg, client) => {
+export default async (msg: any, client: any) : Promise<void> => {
     const clientApp = await client.application.fetch(client.application.id);
 
     if (msg.author.id !== clientApp.owner.id) return;
@@ -12,7 +12,7 @@ module.exports = async (msg, client) => {
             name: 'end',
             description: 'Ends the spy game "The Peculiars"'
         }
-        
+
     ]);
     await msg.reply('Deployed!');
 }
