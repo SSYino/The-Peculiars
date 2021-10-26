@@ -1,7 +1,10 @@
 require("dotenv").config();
 // const { PrismaClient } = require('@prisma/client')
 import { Client, Intents, GuildMember } from 'discord.js';
-import deploySlashCommands  from './slashCommands';
+import runCommands from './runCommands';
+import SlashCommandEvent from './providers/events/SlashCommandEvent'
+import temp from './utils/temp';
+
 // const prisma = new PrismaClient()
 const client = new Client({
     partials: ['MESSAGE', 'USER', 'GUILD_MEMBER', 'REACTION'],
@@ -12,10 +15,10 @@ const client = new Client({
 client.on('ready', async () => {
     console.log(`Bot has logged in as ${client.user!.tag}`)
 
-    //Set Activity Status
+    // Set Activity Status
     client.user!.setActivity('for a Spy', { type: 'WATCHING' })
 
-    //Send Message To Channel
+    // Send Message To Channel
     // client.channels.cache.get("886996891865333811").send('Yeah fuck you Knyu');
 
     console.log('All Bot Commands are ready to be used')
@@ -26,23 +29,36 @@ client.on('messageCreate', async (message) => {
 
     // Deployment Message
     if (message.content.toLowerCase() === `${process.env.PREFIX} deploy`) {
-        await deploySlashCommands(message, client);
+        await runCommands.deploySlashCommands(message, client);
+    }
+    else if (message.content.toLowerCase() === `${process.env.PREFIX} remove`) {
+        await runCommands.removeSlashCommands(message, client);
+    }
+    else if (message.content.toLowerCase() === `${process.env.PREFIX} redeploy`) {
+        await runCommands.removeSlashCommands(message, client);
+        await runCommands.deploySlashCommands(message, client);
+    }
+    else if (message.content.toLowerCase() === "sred") {
+        await runCommands.removeSlashCommands(message, client);
+        await runCommands.deploySlashCommands(message, client);
+    }
+    else if (message.content.toLowerCase() === "sfix") {
+        // temp func to avoid getting limited daily by doing redeploy
+        await temp(message, client);
     }
 
-    //Check messages for commands
-    // msgCheck(message, prisma, client, player)
 })
 
-// client.on('interactionCreate', async (interaction) => {
-//     // if (!interaction.isCommand() || !interaction.guildId) return;
-//     // runSlash(interaction, Commands, client, player, GuildMember);
-// })
+client.on('interactionCreate', (interaction) => {
+    if (!interaction.isCommand() || !interaction.guildId) return;
+    if (['begin', 'end'].includes(interaction.commandName)) {
+        SlashCommandEvent.emitter.emit(`${interaction.channelId}`, interaction);
+        return;
+    }
+    else if (interaction.commandName === 'ping') { interaction.reply('Pong!'); return}
 
-// client.on('guildMemberUpdate', async (oldMember, newMember) => {
-//     // //Update type is not nickname change
-//     // if (oldMember.nickname === newMember.nickname) return;
-//     // onNickChange(oldMember, newMember, prisma);
-// })
+    runCommands.commandInteractions(interaction, client);
+})
 
 client.on('error', () => console.warn("client error"));
 
