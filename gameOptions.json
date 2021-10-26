@@ -1,0 +1,28 @@
+{
+    "locations": {
+        "loc1": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "image": "link to job image or to assets folder"
+        },
+        "loc2": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "image": "link to job image or to assets folder"
+        },
+        "loc3": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "image": "link to job image or to assets folder"
+        }
+    }
+}
