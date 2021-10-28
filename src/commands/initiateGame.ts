@@ -5,6 +5,7 @@ import giveGameRole from "../utils/buttons/giveGameRole";
 import beginGame from "./beginGame";
 import endGame from "./endGame";
 import updatePlayerCount from "./updatePlayerCount";
+import Game from "../providers/Game";
 
 export default async (interaction: CommandInteraction, client: Client) => {
     const reply = await interaction.deferReply({ fetchReply: true })
@@ -48,7 +49,7 @@ export default async (interaction: CommandInteraction, client: Client) => {
     let t0, t1;
     if (!slashCommands || slashCommands.size === 0) {
         // TODO: later change this reply to be an embed
-        interaction.editReply(" ⏳ | Loading Game | Please Be Patient")
+        interaction.editReply("⏳ | Loading Game | Please Be Patient")
         t0 = Date.now()
         slashCommands = await client.guilds.cache.get(interaction.guildId!)?.commands.fetch()
         t1 = Date.now()
@@ -91,6 +92,9 @@ export default async (interaction: CommandInteraction, client: Client) => {
         }
     }
 
+    // Create new Game instance
+    new Game(interaction.guild);
+
     // Create Event Listener for "giveGameRole" Button
     function filter(i: any) {
         return (i.customId === 'gameRole')
@@ -106,10 +110,10 @@ export default async (interaction: CommandInteraction, client: Client) => {
         // TODO: ADD EMBEDS FOR THIS MESSAGE
         i.reply({ ephemeral: true, content: `Click Here --> <#${gameChannel.id}> to move to the game text channel` })
         
-        const updated = await updatePlayerCount(reply.embeds[0] as MessageEmbed, interaction);
+        const updated = await updatePlayerCount(reply.embeds[0] as MessageEmbed, interaction, i);
         if (!updated) i.channel?.send("Error: Failed to update playerCount")
     })
-
+    
     // Create Event Listener for game commands in the game text channel
     SlashCommandEvent.emitter.on("gameInteraction", async (event_interaction: CommandInteraction) => {
         if (event_interaction.channelId !== gameChannel.id) return event_interaction.reply("This isn't the game channel!!... baka!");
@@ -119,7 +123,7 @@ export default async (interaction: CommandInteraction, client: Client) => {
             event_interaction.reply(`${event_interaction.user.username} started the game`);
 
             // Start Game
-            beginGame(interaction, event_interaction, reply.embeds[0] as MessageEmbed)
+            beginGame(interaction, event_interaction, reply.embeds[0] as MessageEmbed, playerRole, gameChannel)
         }
         else if (event_interaction.commandName === "end") {
             if (!slashCommands || slashCommands.size === 0) return event_interaction.reply("Error: No Slash Commands found")
