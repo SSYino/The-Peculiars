@@ -1,41 +1,32 @@
-import { ApplicationCommand, Collection, CommandInteraction, InteractionCollector, Role, TextChannel } from "discord.js/typings/index.js";
-import EventEmitter from "events";
-import giveGameRole from "../utils/buttons/giveGameRole";
+import { ApplicationCommand, Collection, CommandInteraction, MessageEmbed, Role, TextChannel } from "discord.js";
 
-export default async (interaction: CommandInteraction, event_interaction: CommandInteraction, slashCommandEventEmitter: EventEmitter, slashCommands: Collection<string, ApplicationCommand>, everyoneRole: Role, playerRole: Role, gameChannel: TextChannel, buttonCollector: InteractionCollector<any> | undefined) => {
+export default async (interaction: CommandInteraction, event_interaction: CommandInteraction, inviteMessageEmebed: MessageEmbed, slashCommands: Collection<string, ApplicationCommand>, everyoneRole: Role, playerRole: Role, gameChannel: TextChannel) => {
+    // Lock "begin" and "end" slash commands from being used
     for (const command of slashCommands) {
-        if (command[1].name === 'start') {
-            slashCommands
-                .get(command[1].id)
-                ?.permissions
-                .set({
-                    permissions: [
-                        {
-                            id: everyoneRole.id,
-                            type: "ROLE",
-                            permission: true
-                        }
-                    ]
-                })
-        }
-        else if (command[1].name === 'begin' || command[1].name === 'end') {
-            slashCommands
-                .get(command[1].id)
-                ?.permissions
-                .set({
-                    permissions: [
-                        {
-                            id: playerRole.id,
-                            type: "ROLE",
-                            permission: false
-                        }
-                    ]
-                })
+        if (command[1].name === 'begin' || command[1].name === 'end') {
+            await slashCommands
+            .get(command[1].id)
+            ?.permissions
+            .set({
+                permissions: [
+                    {
+                        id: playerRole.id,
+                        type: "ROLE",
+                        permission: false
+                    }
+                ]
+            })
         }
     }
-
-    interaction.editReply({ components: [giveGameRole("ended")] })
-    buttonCollector?.stop();
+    
+    // Change Invite Message Embed
+    const newInviteMessageEmebed = new MessageEmbed(inviteMessageEmebed);
+    const [fieldPlayerCount, fieldGameRound, fieldGameStatus] = newInviteMessageEmebed.fields;
+    fieldPlayerCount.name = "**Participants**";
+    fieldPlayerCount.value = fieldPlayerCount.value.match(/^\d+/)![0];
+    fieldGameRound.name = "**Rounds Played**";
+    fieldGameStatus.value = "Terminated";
+    interaction.editReply({embeds: [newInviteMessageEmebed]});
 
     await event_interaction.followUp("**Deleting this channel in 5 seconds**")
     setTimeout(() => {
@@ -43,5 +34,6 @@ export default async (interaction: CommandInteraction, event_interaction: Comman
         playerRole.delete();
     }, 5000)
 
-    slashCommandEventEmitter.removeAllListeners();
+    // Allow the use of the "start" slash command to start a new game
+    slashCommands.find(command => command.name === "start")?.permissions.set({ permissions: [{ id: everyoneRole.id, type: "ROLE", permission: true }] })
 }
