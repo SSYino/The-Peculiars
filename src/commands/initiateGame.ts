@@ -1,12 +1,10 @@
-import { ApplicationCommand, Client, Collection, CommandInteraction, MessageEmbed } from "discord.js/typings/index.js";
+import { ApplicationCommand, Client, Collection, CommandInteraction, GuildMemberRoleManager, MessageEmbed } from "discord.js/typings/index.js";
 import SlashCommandEvent from '../providers/events/SlashCommandEvent'
 import inviteMessage from "../utils/messageEmbeds/invite";
 import giveGameRole from "../utils/buttons/giveGameRole";
 import beginGame from "./beginGame";
 import endGame from "./endGame";
 import updatePlayerCount from "./updatePlayerCount";
-import fs from "fs";
-import temp from "../utils/temp";
 
 export default async (interaction: CommandInteraction, client: Client) => {
     const reply = await interaction.deferReply({ fetchReply: true })
@@ -100,8 +98,9 @@ export default async (interaction: CommandInteraction, client: Client) => {
     const buttonCollector = interaction.channel?.createMessageComponentCollector({ filter, componentType: "BUTTON", dispose: true });
 
     buttonCollector?.on("collect", async i => {
-        const tempDb = await JSON.parse((fs.readFileSync(`${process.cwd()}/src/providers/gamePlayers.json`) as unknown) as string);
-        if (tempDb.includes(i.user.id)) return i.reply({ephemeral: true, content: `You are already a player\nGame Channel --> <#${gameChannel.id}>`});
+        const memberRoles = (i.member?.roles as GuildMemberRoleManager).cache;
+        if (memberRoles.find(role => role.id === playerRole.id)) return i.reply({ephemeral: true, content: `You are already a player\nGame Channel --> <#${gameChannel.id}>`});
+
         i.guild?.members.cache.get(i.user.id)?.roles.add(playerRole);
 
         // TODO: ADD EMBEDS FOR THIS MESSAGE
@@ -109,9 +108,6 @@ export default async (interaction: CommandInteraction, client: Client) => {
         
         const updated = await updatePlayerCount(reply.embeds[0] as MessageEmbed, interaction);
         if (!updated) i.channel?.send("Error: Failed to update playerCount")
-
-        tempDb.push(i.user.id)
-        fs.writeFile(`${process.cwd()}/src/providers/gamePlayers.json`, JSON.stringify(tempDb, null, 2), () => {})
     })
 
     // Create Event Listener for game commands in the game text channel
