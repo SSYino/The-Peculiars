@@ -38,10 +38,6 @@ client.on('messageCreate', async (message) => {
         await runCommands.removeSlashCommands(message, client);
         await runCommands.deploySlashCommands(message, client);
     }
-    else if (message.content.toLowerCase() === "sred") {
-        await runCommands.removeSlashCommands(message, client);
-        await runCommands.deploySlashCommands(message, client);
-    }
     else if (message.content.toLowerCase() === "sfix") {
         // temp func to avoid getting limited daily by doing redeploy
         await temp(message, client);
