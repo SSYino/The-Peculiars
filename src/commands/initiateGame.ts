@@ -115,7 +115,9 @@ export default async (interaction: CommandInteraction, client: Client) => {
     })
 
     // Create Event Listener for game commands in the game text channel
-    SlashCommandEvent.emitter.on(`${gameChannel.id}`, async (event_interaction: CommandInteraction) => {
+    SlashCommandEvent.emitter.on("gameInteraction", async (event_interaction: CommandInteraction) => {
+        if (event_interaction.channelId !== gameChannel.id) return event_interaction.reply("This isn't the game channel!!... baka!");
+
         if (event_interaction.commandName === "begin") {
             interaction.editReply({ components: [giveGameRole("playing")] })
             event_interaction.reply(`${event_interaction.user.username} started the game`);

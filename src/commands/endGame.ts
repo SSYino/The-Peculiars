@@ -45,5 +45,5 @@ export default async (interaction: CommandInteraction, event_interaction: Comman
         playerRole.delete();
     }, 5000)
 
-    slashCommandEventEmitter.removeAllListeners(`${gameChannel.id}`);
+    slashCommandEventEmitter.removeAllListeners();
 }

@@ -47,8 +47,9 @@ client.on('messageCreate', async (message) => {
 
 client.on('interactionCreate', (interaction) => {
     if (!interaction.isCommand() || !interaction.guildId) return;
+
     if (['begin', 'end'].includes(interaction.commandName)) {
-        SlashCommandEvent.emitter.emit(`${interaction.channelId}`, interaction);
+        SlashCommandEvent.emitter.emit("gameInteraction", interaction);
         return;
     }
     else if (interaction.commandName === 'ping') { interaction.reply('Pong!'); return}
