@@ -18,6 +18,9 @@ client.on('ready', async () => {
     // Set Activity Status
     client.user!.setActivity('for a Spy', { type: 'WATCHING' })
 
+    // Check gameOptions.json
+    // gameOptionsCheck()
+
     // Send Message To Channel
     // client.channels.cache.get("886996891865333811").send('Yeah fuck you Knyu');
 
