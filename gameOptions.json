@@ -6,7 +6,7 @@
                 "job2",
                 "job3"
             ],
-            "image": "link to job image or to assets folder"
+            "imagePath": "link to job image or to assets folder"
         },
         "loc2": {
             "jobs": [
@@ -14,7 +14,7 @@
                 "job2",
                 "job3"
             ],
-            "image": "link to job image or to assets folder"
+            "imagePath": "link to job image or to assets folder"
         },
         "loc3": {
             "jobs": [
@@ -22,7 +22,7 @@
                 "job2",
                 "job3"
             ],
-            "image": "link to job image or to assets folder"
+            "imagePath": "link to job image or to assets folder"
         }
     }
 }
