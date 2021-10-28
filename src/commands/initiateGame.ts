@@ -119,16 +119,18 @@ export default async (interaction: CommandInteraction, client: Client) => {
             event_interaction.reply(`${event_interaction.user.username} started the game`);
 
             // Start Game
-            beginGame()
+            beginGame(interaction, event_interaction, reply.embeds[0] as MessageEmbed)
         }
         else if (event_interaction.commandName === "end") {
             if (!slashCommands || slashCommands.size === 0) return event_interaction.reply("Error: No Slash Commands found")
 
             interaction.editReply({ components: [giveGameRole("ended")] })
             event_interaction.reply(`${event_interaction.user.username} ended the game`);
+            buttonCollector?.stop();
 
             // End Game
-            await endGame(interaction, event_interaction, SlashCommandEvent.emitter, slashCommands, everyoneRole, playerRole, gameChannel, buttonCollector)
+            await endGame(interaction, event_interaction, reply.embeds[0] as MessageEmbed, slashCommands, everyoneRole, playerRole, gameChannel)
+            SlashCommandEvent.emitter.removeAllListeners();
         }
         else
             event_interaction.reply(`${event_interaction.user.username} ran **${event_interaction.commandName}**`);
