@@ -1,32 +1,45 @@
-import { CommandInteraction, MessageEmbed, Role, TextChannel } from "discord.js";
+import { CommandInteraction, MessageComponentInteraction, MessageEmbed, Role, TextChannel, CollectorFilter, InteractionCollector, ButtonInteraction, Message } from "discord.js";
+import readyButton from "../utils/buttons/ready";
+import Game from "../providers/Game";
+import readyEmbed from "../utils/messageEmbeds/ready";
 
-export default async (inviteMessageInteraction: CommandInteraction, gameInteraction: CommandInteraction, inviteMessageEmbed: MessageEmbed, playerRole: Role, gameChannel: TextChannel) => {
+export default async (inviteMessage: Message, gameInteraction: CommandInteraction, playerRole: Role, gameChannel: TextChannel) => {
     // Disable "begin" Slash Command
     const beginSlashCommand = gameInteraction.guild?.commands.cache.find(command => command.name === 'begin')
     if (!beginSlashCommand) return gameInteraction.channel?.send("Error: Could not find \"begin\" Slash Command in cache\nbeginGame.ts")
     beginSlashCommand.permissions.set({ permissions: [] })
 
     // Update invite message
-    const newEmbed = new MessageEmbed(inviteMessageEmbed)
+    const oldEmbed = (await inviteMessage.fetch()).embeds[0]
+    const newEmbed = new MessageEmbed(oldEmbed)
     const [fieldPlayerCount, fieldRound, fieldGameStatus] = newEmbed.fields
     const currentPlayerCount = fieldPlayerCount.value.match(/^\d+/)![0];
-
+    
     fieldPlayerCount.name = "**Playing**";
     fieldPlayerCount.value = currentPlayerCount;
     fieldGameStatus.value = "In Progress";
 
-    inviteMessageInteraction.editReply({ embeds: [newEmbed] })
+    inviteMessage.edit({ embeds: [newEmbed] })
 
     // Disable players sending messages
     gameChannel.permissionOverwrites.edit(playerRole, { SEND_MESSAGES: false });
 
     // Send Ready Message
-    gameInteraction.followUp("Press button when ready\nEveryone needs to be ready before game can start")
+    const readyMessage = await gameInteraction.followUp({embeds: [readyEmbed("waiting", 0, parseInt(currentPlayerCount))], components: [readyButton("waiting")], fetchReply: true})
 
     // Ready Button Collector
-    
-    // Game.start()
+    const filter: CollectorFilter<[MessageComponentInteraction]> = (i): boolean => {
+        return i.isButton() && i.customId === 'ready'
+    }
+    const readyButtonCollector = gameInteraction.channel?.createMessageComponentCollector({filter, componentType: "BUTTON"}) as InteractionCollector<ButtonInteraction>
 
+    // Get Game instance
+    const game = Game.get(gameInteraction.guildId!);
+    if (!game) return gameInteraction.channel?.send("Error: Could not find game instance on the current guild");
+    
+    // Start Game
+    game.start(readyButtonCollector, readyEmbed, readyMessage as Message)
+    // game.on("endRound", //update round in invite box)
     /*
     everyone pressed ready
     got interaction from every player
@@ -46,5 +59,6 @@ export default async (inviteMessageInteraction: CommandInteraction, gameInteract
     choose to next person to ask questions
     the spy always has an input form to answer the location
     if the spy answers correctly, end the round immediately, spy wins, otherwise, end the round, spy loses
+    Show the avatar and name of the user who won
     */
 }
