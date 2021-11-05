@@ -6,9 +6,10 @@ import beginGame from "./beginGame";
 import endGame from "./endGame";
 import updatePlayerCount from "./updatePlayerCount";
 import Game from "../providers/Game";
+import redirectToGameChannel from "../utils/buttons/redirectToGameChannel";
 
 export default async (interaction: CommandInteraction, client: Client) => {
-    const reply = await interaction.deferReply({ fetchReply: true })
+    await interaction.deferReply({ fetchReply: true })
     const clientId = process.env.CLIENT_UUID;
     if (!clientId) return interaction.editReply("Error: Unable to find clientId")
 
@@ -56,9 +57,12 @@ export default async (interaction: CommandInteraction, client: Client) => {
     }
     if (!slashCommands || slashCommands.size === 0) return interaction.editReply("Error: Unable to fetch slash commands");
 
+    interaction.deleteReply()
+
     // Send invite message to the channel
     // Send button that gives neccassary role to play the game
-    await interaction.editReply({ content: "\n", embeds: [inviteMessage], components: [giveGameRole("waiting")] })
+    const inviteBox = await interaction.channel?.send({ embeds: [inviteMessage], components: [giveGameRole("waiting")] })
+    if (!inviteBox) throw "Error: Unable to send Invite Box"
 
     // Manage Slash Commands Permissions
     for (const command of slashCommands) {
@@ -93,7 +97,7 @@ export default async (interaction: CommandInteraction, client: Client) => {
     }
 
     // Create new Game instance
-    new Game(interaction.guild);
+    new Game(interaction.guild, gameChannel);
 
     // Create Event Listener for "giveGameRole" Button
     function filter(i: any) {
@@ -103,37 +107,38 @@ export default async (interaction: CommandInteraction, client: Client) => {
 
     buttonCollector?.on("collect", async i => {
         const memberRoles = (i.member?.roles as GuildMemberRoleManager).cache;
-        if (memberRoles.find(role => role.id === playerRole.id)) return i.reply({ephemeral: true, content: `You are already a player\nGame Channel --> <#${gameChannel.id}>`});
+        // TODO: ADD EMBEDS FOR THIS MESSAGE
+        if (memberRoles.find(role => role.id === playerRole.id)) return await i.reply({ ephemeral: true, content: "Click here to get redirected to the game channel", components: [redirectToGameChannel(gameChannel.guild.id, gameChannel.id)] });
 
         i.guild?.members.cache.get(i.user.id)?.roles.add(playerRole);
 
         // TODO: ADD EMBEDS FOR THIS MESSAGE
-        i.reply({ ephemeral: true, content: `Click Here --> <#${gameChannel.id}> to move to the game text channel` })
-        
-        const updated = await updatePlayerCount(reply.embeds[0] as MessageEmbed, interaction, i);
+        i.reply({ ephemeral: true, content: "Click here to get redirected to the game channel", components: [redirectToGameChannel(gameChannel.guild.id, gameChannel.id)] })
+
+        const updated = await updatePlayerCount(inviteBox.embeds[0] as MessageEmbed, inviteBox, i);
         if (!updated) i.channel?.send("Error: Failed to update playerCount")
     })
-    
+
     // Create Event Listener for game commands in the game text channel
     SlashCommandEvent.emitter.on("gameInteraction", async (event_interaction: CommandInteraction) => {
         if (event_interaction.channelId !== gameChannel.id) return event_interaction.reply("This isn't the game channel!!... baka!");
 
         if (event_interaction.commandName === "begin") {
-            interaction.editReply({ components: [giveGameRole("playing")] })
+            inviteBox.edit({ components: [giveGameRole("playing")] })
             event_interaction.reply(`${event_interaction.user.username} started the game`);
 
             // Start Game
-            beginGame(interaction, event_interaction, reply.embeds[0] as MessageEmbed, playerRole, gameChannel)
+            beginGame(inviteBox, event_interaction, playerRole, gameChannel)
         }
         else if (event_interaction.commandName === "end") {
             if (!slashCommands || slashCommands.size === 0) return event_interaction.reply("Error: No Slash Commands found")
 
-            interaction.editReply({ components: [giveGameRole("ended")] })
+            inviteBox.edit({ components: [giveGameRole("ended")] })
             event_interaction.reply(`${event_interaction.user.username} ended the game`);
             buttonCollector?.stop();
 
             // End Game
-            await endGame(interaction, event_interaction, reply.embeds[0] as MessageEmbed, slashCommands, everyoneRole, playerRole, gameChannel)
+            await endGame(inviteBox, event_interaction, slashCommands, everyoneRole, playerRole, gameChannel)
             SlashCommandEvent.emitter.removeAllListeners();
         }
         else
