@@ -6,7 +6,7 @@
                 "job2",
                 "job3"
             ],
-            "imagePath": "link to job image or to assets folder"
+            "imageRelativePath": "link to job image or to assets folder"
         },
         "loc2": {
             "jobs": [
@@ -14,7 +14,7 @@
                 "job2",
                 "job3"
             ],
-            "imagePath": "link to job image or to assets folder"
+            "imageRelativePath": "link to job image or to assets folder"
         },
         "loc3": {
             "jobs": [
@@ -22,7 +22,183 @@
                 "job2",
                 "job3"
             ],
-            "imagePath": "link to job image or to assets folder"
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc4": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc5": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc6": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc7": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc8": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc9": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc10": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc11": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc12": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc13": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc14": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc15": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc16": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc17": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc18": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc19": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc20": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc21": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc22": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc23": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc24": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
+        },
+        "loc25": {
+            "jobs": [
+                "job1",
+                "job2",
+                "job3"
+            ],
+            "imageRelativePath": "link to job image or to assets folder"
         }
     }
 }
