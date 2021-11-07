@@ -9,7 +9,7 @@ import Game from "../providers/Game";
 import redirectToGameChannel from "../utils/buttons/redirectToGameChannel";
 
 export default async (interaction: CommandInteraction, client: Client) => {
-    await interaction.deferReply({ fetchReply: true })
+    await interaction.reply("⏳ | Loading Game | Please Be Patient") // TODO: later change this reply to be an embed
     const clientId = process.env.CLIENT_UUID;
     if (!clientId) return interaction.editReply("Error: Unable to find clientId")
 
@@ -49,15 +49,13 @@ export default async (interaction: CommandInteraction, client: Client) => {
     let slashCommands: Collection<string, ApplicationCommand> | undefined = interaction.guild?.commands.cache;
     let t0, t1;
     if (!slashCommands || slashCommands.size === 0) {
-        // TODO: later change this reply to be an embed
-        interaction.editReply("⏳ | Loading Game | Please Be Patient")
         t0 = Date.now()
         slashCommands = await client.guilds.cache.get(interaction.guildId!)?.commands.fetch()
         t1 = Date.now()
     }
     if (!slashCommands || slashCommands.size === 0) return interaction.editReply("Error: Unable to fetch slash commands");
 
-    interaction.deleteReply()
+    interaction.editReply(`${interaction.user.username} started the game`)
 
     // Send invite message to the channel
     // Send button that gives neccassary role to play the game
@@ -97,7 +95,7 @@ export default async (interaction: CommandInteraction, client: Client) => {
     }
 
     // Create new Game instance
-    new Game(interaction.guild, gameChannel);
+    const game = new Game(interaction.guild, gameChannel);
 
     // Create Event Listener for "giveGameRole" Button
     function filter(i: any) {
@@ -109,13 +107,14 @@ export default async (interaction: CommandInteraction, client: Client) => {
         const memberRoles = (i.member?.roles as GuildMemberRoleManager).cache;
         // TODO: ADD EMBEDS FOR THIS MESSAGE
         if (memberRoles.find(role => role.id === playerRole.id)) return await i.reply({ ephemeral: true, content: "Click here to get redirected to the game channel", components: [redirectToGameChannel(gameChannel.guild.id, gameChannel.id)] });
-
+        
         i.guild?.members.cache.get(i.user.id)?.roles.add(playerRole);
 
         // TODO: ADD EMBEDS FOR THIS MESSAGE
         i.reply({ ephemeral: true, content: "Click here to get redirected to the game channel", components: [redirectToGameChannel(gameChannel.guild.id, gameChannel.id)] })
 
-        const updated = await updatePlayerCount(inviteBox.embeds[0] as MessageEmbed, inviteBox, i);
+        const inviteMessage = await inviteBox.fetch();
+        const updated = await updatePlayerCount(inviteMessage.embeds[0] as MessageEmbed, inviteMessage, i);
         if (!updated) i.channel?.send("Error: Failed to update playerCount")
     })
 
@@ -124,6 +123,14 @@ export default async (interaction: CommandInteraction, client: Client) => {
         if (event_interaction.channelId !== gameChannel.id) return event_interaction.reply("This isn't the game channel!!... baka!");
 
         if (event_interaction.commandName === "begin") {
+            const hasGameStarted = game.getCurrentRound()
+            if (hasGameStarted) return await event_interaction.reply("The game has already started")
+            else game.startCurrentRound();
+
+            const MinimumPlayersNeeded = 3;
+            const currentPlayerCount = game.getPlayers()?.size
+            if (currentPlayerCount && currentPlayerCount < MinimumPlayersNeeded) return event_interaction.reply(`Cannot Begin Game!\nMinimum of ${MinimumPlayersNeeded} players needed`)
+            
             inviteBox.edit({ components: [giveGameRole("playing")] })
             event_interaction.reply(`${event_interaction.user.username} started the game`);
 
