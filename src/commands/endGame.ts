@@ -1,5 +1,6 @@
-import { ApplicationCommand, Collection, CommandInteraction, Message, MessageEmbed, Role, TextChannel } from "discord.js";
+import { ApplicationCommand, Collection, CommandInteraction, Message, MessageAttachment, MessageEmbed, Role, TextChannel } from "discord.js";
 import { promisify } from "util";
+import Game from "../providers/Game";
 
 export default async (inviteMessage: Message, event_interaction: CommandInteraction, slashCommands: Collection<string, ApplicationCommand>, everyoneRole: Role, playerRole: Role, gameChannel: TextChannel) => {
     // Lock "begin" and "end" slash commands from being used
@@ -28,7 +29,13 @@ export default async (inviteMessage: Message, event_interaction: CommandInteract
     fieldPlayerCount.value = fieldPlayerCount.value.match(/^\d+/)![0];
     fieldGameRound.name = "**Rounds Played**";
     fieldGameStatus.value = "Terminated";
-    inviteMessage.edit({ embeds: [newInviteMessageEmebed] });
+
+    const thumbnail = new MessageAttachment("assets/Images/redLogo.png");
+    newInviteMessageEmebed.setThumbnail("attachment://redLogo.png")
+    newInviteMessageEmebed.setColor("RED")
+
+    inviteMessage.edit({ embeds: [newInviteMessageEmebed], files: [thumbnail] });
+    Game.clearInstance(inviteMessage.guildId!);
 
     try {
         await event_interaction.followUp("**Deleting this channel in 5 seconds**")
