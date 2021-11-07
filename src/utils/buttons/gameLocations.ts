@@ -1,8 +1,6 @@
 import { MessageActionRow, MessageButton, MessageButtonStyleResolvable } from "discord.js"
 import { GameLocations } from "../../providers/Game";
 
-type callbackFunction = (markedOutButtonsCustomId: string[]) => void;
-
 export default (locations: GameLocations, markOutButtonsCustomId?: string[]): MessageActionRow[] => {
     const totalLocationsSize = locations.size;
     const locationsClone = locations.clone();
@@ -30,7 +28,6 @@ export default (locations: GameLocations, markOutButtonsCustomId?: string[]): Me
     }
 
     for (let rowNum = 1; rowNum <= totalActionRows; rowNum++) {
-        // console.log(rowNum)
         const locationsName: string[] = [];
         const buttonRows: MessageButton[] = [];
 
@@ -40,7 +37,6 @@ export default (locations: GameLocations, markOutButtonsCustomId?: string[]): Me
         })
 
         for (const index in locationsName) {
-            // console.log(index)
             const customId = `location${locationsName[index]}`;
             let buttonStyle: MessageButtonStyleResolvable = "PRIMARY";
 
@@ -54,6 +50,6 @@ export default (locations: GameLocations, markOutButtonsCustomId?: string[]): Me
 
         actionRows.push(new MessageActionRow().addComponents(buttonRows))
     }
-    // console.log(actionRows);
+    
     return actionRows;
 }
