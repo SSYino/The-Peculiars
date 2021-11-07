@@ -1,76 +1,294 @@
-import { Collection, Snowflake, GuildMember, Guild } from "discord.js"
+import { Collection, Snowflake, GuildMember, Guild, InteractionCollector, ButtonInteraction, MessageEmbed, Message, TextChannel } from "discord.js"
 import fs from "fs";
+import readyButton from "../utils/buttons/ready";
+import gameLocationsButtons from "../utils/buttons/gameLocations"
+import gameLocationsEmbed from "../utils/messageEmbeds/gameLocations"
+import gameLocations from "../utils/buttons/gameLocations";
+import showJobAndPrivateLocations from "../utils/buttons/showJobAndPrivateLocations";
 
-type GamePlayers = Collection<Snowflake, GuildMember>
-type GameLocations = Map<string, GameLocationInterface>
+type GamePlayers = Collection<Snowflake, { guildMember: GuildMember, playerData: PlayerGameData }>
+type GameLocations = Collection<string, GameLocationInterface>
+type LocationName = string
+type CustomButtonID = string
+type PlayerMarkedOutLocations = Collection<Snowflake, CustomButtonID[]>
+type RoundNumber = number
+type GameRounds = Collection<RoundNumber, RoundInfoInterface | {}>
+type PlayerGameData = PlayerGameDataInterface
 
 interface GameLocationInterface {
     readonly name: string
-    readonly jobs: Map<string, { name: string, imagePath: string }>
-    readonly imagePath: string
+    readonly jobs: Collection<string, { imageRelativePath: string }>
+    readonly imageRelativePath: string
 }
 
 interface GameOptionsLocationInterface {
-    [propName: string]: {
+    [locationName: string]: {
         jobs: string[]
-        imagePath: string
+        imageRelativePath: string
     }
+}
+
+interface RoundInfoInterface {
+    players: GamePlayers
+    location: string
+    spy: GuildMember
+    winningTeam: "Spy" | "The Employed" | "None"
+}
+
+interface PlayerGameDataInterface {
+    job: string | null
+    privateLocationsButtonInteraction?: ButtonInteraction
 }
 
 class Game {
     public readonly locations: GameLocations
-    private players: GamePlayers | null
+    private _players: GamePlayers | null
     public readonly guild: Guild
+    public readonly gameTextChannel: TextChannel
+    private _readyPlayers: GamePlayers | null
+    private _markedOutLocations: PlayerMarkedOutLocations | null
+    private _rounds: GameRounds
+    private _currentRound: RoundInfoInterface | "Starting" | null
 
-    private static instances: Game[] = []
+    private static _instances: Game[] = []
 
-    constructor(guild: Guild) {
-        this.players = null;
+    constructor(guild: Guild, gameChannel: TextChannel) {
+        this._players = null;
         this.guild = guild;
+        this.gameTextChannel = gameChannel;
+        this._readyPlayers = null;
+        this._markedOutLocations = null;
+        this._rounds = new Collection<0, {}>();
+        this._currentRound = null;
         const startingLocations = JSON.parse(`${fs.readFileSync(`${process.cwd()}/gameOptions.json`)}`).locations as GameOptionsLocationInterface
-        const locationMap = new Map()
-        for (const name of Object.keys(startingLocations)) {
-            const locationData = startingLocations[name]
-            locationMap.set(name, locationData)
+        const locationMap = new Collection<LocationName, GameLocationInterface>()
+        for (const locationName of Object.keys(startingLocations)) {
+            const locationData: any = startingLocations[locationName]
+            const jobs: string[] = locationData.jobs;
+            const jobCollection = new Collection<string, { imageRelativePath: string }>()
+
+            jobs.forEach(job => jobCollection.set(job, { imageRelativePath: "None" }))
+
+            locationData.jobs = jobCollection
+            locationData.name = locationName
+            locationMap.set(locationName, locationData)
         }
         this.locations = locationMap
-        Game.instances.push(this)
+        Game._instances.push(this)
     }
 
     public addPlayer(player: GuildMember): GamePlayers | undefined {
-        if (!this.players) {
-            return this.players = new Collection<Snowflake, GuildMember>([[player.id, player]]);
+        if (!this._players) {
+            return this._players = new Collection<Snowflake, { guildMember: GuildMember, playerData: PlayerGameDataInterface }>([
+                [player.id, { guildMember: player, playerData: { job: null } }]
+            ]);
         }
         else {
-            return this.players.set(player.id, player)
+            return this._players.set(player.id, { guildMember: player, playerData: { job: null } })
         }
     }
-    
+
     public getPlayers(): GamePlayers | null {
-        return this.players;
+        return this._players;
+    }
+
+    private addReadyPlayer(player: GuildMember): GamePlayers | undefined {
+        if (!this._readyPlayers) {
+            return this._readyPlayers = new Collection<Snowflake, { guildMember: GuildMember, playerData: PlayerGameDataInterface }>([
+                [player.id, { guildMember: player, playerData: { job: null } }]
+            ]);
+        }
+        else {
+            return this._readyPlayers.set(player.id, { guildMember: player, playerData: { job: null } })
+        }
+    }
+
+    public getReadyPlayers(): GamePlayers | null {
+        return this._readyPlayers;
     }
 
     public static get(guildId: string): Game | undefined {
-        return this.instances.find(game => game.guild.id === guildId);
+        return this._instances.find(game => game.guild.id === guildId);
     }
 
     public static clearInstance(guildId?: string): Game | Game[] | undefined {
         if (!guildId) {
-            const instances = this.instances;
-            this.instances = [];
+            const instances = this._instances;
+            this._instances = [];
             return instances
         }
-        return this.instances.find((game, index) => {
+        return this._instances.find((game, index) => {
             if (game.guild.id === guildId) {
-                this.instances.splice(index, 1)
+                this._instances.splice(index, 1)
                 return true
             }
         })
     }
 
     public static getInstances(): Game[] {
-        return this.instances;
+        return this._instances;
+    }
+
+    private setPrivateMarkedOutLocations(playerId: string, markedOutButtons: CustomButtonID[]): void {
+        let markedOutLocations = this._markedOutLocations;
+
+        if (markedOutLocations) {
+            markedOutLocations.delete(playerId)
+        }
+        else {
+            const privateLocationsCollection = new Collection<string, CustomButtonID[]>();
+            this._markedOutLocations = privateLocationsCollection;
+        }
+        
+        this._markedOutLocations!.set(playerId, markedOutButtons);
+    }
+
+    private getPrivateMarkedOutLocations(playerId: string): CustomButtonID[] | null | undefined {
+        if (!this._markedOutLocations) return null;
+
+        const playerMarkedOutLocations = this._markedOutLocations.get(playerId);
+
+        if (!playerMarkedOutLocations) return undefined
+        else return playerMarkedOutLocations
+    }
+
+    public getCurrentRound() {
+        return this._currentRound
+    }
+
+    public setCurrentRound(location: string, players: GamePlayers, spy: GuildMember, winningTeam: "Spy" | "The Employed" | "None" = "None") {
+        this._currentRound = { location, players, spy, winningTeam };
+    }
+
+    public startCurrentRound() {
+        this._currentRound = "Starting";
+    }
+
+    public start(buttonCollector: InteractionCollector<ButtonInteraction>, readyEmbed: (state: ("waiting" | "started"), currentPlayers?: number, maxPlayers?: number) => MessageEmbed, readyMessage: Message, inviteMessage: Message): void {
+        const randomizeLocationsAndJobs = (): boolean => {
+            // Randomize Location
+            const location = this.locations.random();
+
+            // Randomize a single player to become the spy
+            if (!this._players) {
+                readyMessage.channel.send("Error: Could not pick a spy (GamePlayers is null)");
+                return false
+            }
+            const spy = this._players.random()
+            spy.playerData.job = "Spy"
+
+            // Assign random jobs for players and set game location
+            const nonSpyPlayerCount = this._players.size - 1;
+            const randomJobs = location.jobs.randomKey(nonSpyPlayerCount)
+            let jobIndex = 0;
+
+            this._players.forEach(player => {
+                if (player.playerData.job !== "Spy") {
+                    player.playerData.job = randomJobs[jobIndex]
+                    jobIndex++
+                }
+            })
+
+            this.setCurrentRound(location.name, this._players, spy.guildMember)
+
+            return true
+        }
+
+        buttonCollector.on("collect", async (buttonInteraction) => {
+            if (buttonInteraction.customId === "ready") {
+                if (!this._players) throw "Error in ready button collector: No players in game instance"
+                // TODO | Allow players to unready
+                if (this._readyPlayers?.has(buttonInteraction.user.id)) return buttonInteraction.reply({ ephemeral: true, content: "You cannot unready (yet)" })
+
+                this.addReadyPlayer(buttonInteraction.member as GuildMember);
+                if (!this._readyPlayers) throw "Error in ready button collector: No ready players in game instance"
+
+                await buttonInteraction.reply(`<@${buttonInteraction.user.id}> is Ready!`)
+
+                if (this._players.size !== this._readyPlayers.size) {
+                    const currentPlayerCount = this._readyPlayers.size
+                    const maxPlayerCount = this._players.size
+                    readyMessage.edit({ embeds: [readyEmbed("waiting", currentPlayerCount, maxPlayerCount)] })
+                } else {
+                    readyMessage.edit({ embeds: [readyEmbed("started")], components: [readyButton("started")] })
+
+                    const randomized = randomizeLocationsAndJobs();
+                    if (!randomized) return
+
+                    // Update Round on Invite Message
+                    const oldEmbed = (await inviteMessage.fetch()).embeds[0]
+                    const newEmbed = new MessageEmbed(oldEmbed)
+                    let [, round] = newEmbed.fields;
+                    round.value = `${parseInt(round.value) + 1}`
+                    inviteMessage.edit({embeds: [newEmbed]})
+
+                    // Start Sending Locations
+                    readyMessage.channel.send({ embeds: [gameLocationsEmbed(this.locations)], components: [showJobAndPrivateLocations] })
+                }
+            }
+            else if (buttonInteraction.customId === "showJob") {
+                if (this._currentRound === "Starting") return buttonInteraction.reply("Error: Round Status is \"Starting\"");
+                const location = this._currentRound?.location;
+                const job = this._players?.get(buttonInteraction.user.id)?.playerData.job
+
+                if (!location) return buttonInteraction.reply("Error: Could not find location for current round");
+                if (job === null) return buttonInteraction.reply("Error: User did not recieve a job")
+                else if (job === undefined) return buttonInteraction.reply("Error: Could not find user in GamePlayers")
+
+                if (job === "Spy") buttonInteraction.reply({ content: `You are a **Spy**\nGuess the location correctly to win the game`, ephemeral: true/*, components: "Add spy guess location button here"*/ })
+                else buttonInteraction.reply({ content: `We are currently at the **${location}**\nYou are a **${job}**`, ephemeral: true })
+            }
+            else if (buttonInteraction.customId === "showPrivateLocations") {
+                const player = this._players?.get(buttonInteraction.user.id)
+                const markedOutButtons = this.getPrivateMarkedOutLocations(buttonInteraction.user.id);
+
+                if (!player) { buttonInteraction.reply("Error: Could not find player in GamePlayers"); return }
+                if (!markedOutButtons) buttonInteraction.reply({ content: "Locations", components: gameLocations(this.locations), ephemeral: true })
+                else buttonInteraction.reply({ content: "Locations", components: gameLocations(this.locations, markedOutButtons), ephemeral: true })
+
+                player.playerData.privateLocationsButtonInteraction = buttonInteraction;
+            }
+            else if (buttonInteraction.customId.startsWith("location")) {
+                const player = this._players?.get(buttonInteraction.user.id);
+                if (!player) return buttonInteraction.reply("Error: Could not find player in GamePlayers");
+
+                const privateLocationsButtonInteraction = player.playerData.privateLocationsButtonInteraction
+                if (!privateLocationsButtonInteraction) return buttonInteraction.reply("Error: Private Locations Reply does not exist");
+
+                const playerPrivateMarkedOutLocations = this.getPrivateMarkedOutLocations(buttonInteraction.user.id);
+
+                if (!playerPrivateMarkedOutLocations) {
+                    await buttonInteraction.reply(".");
+                    buttonInteraction.deleteReply();
+                    const newButtons = gameLocationsButtons(this.locations, [buttonInteraction.customId]);
+                    this.setPrivateMarkedOutLocations(buttonInteraction.user.id, [buttonInteraction.customId]);
+
+                    privateLocationsButtonInteraction.editReply({ components: newButtons });
+                }
+                else {
+                    await buttonInteraction.reply(".");
+                    buttonInteraction.deleteReply();
+                    const markedOutLocationsCopy = playerPrivateMarkedOutLocations.slice();
+                    const testArr = markedOutLocationsCopy.filter(ID => ID !== buttonInteraction.customId)
+
+                    // markedOutLocationsCopy does not have the current buttonInteraction customId in it
+                    if (testArr.length === markedOutLocationsCopy.length) {
+                        markedOutLocationsCopy.push(buttonInteraction.customId)
+                        const newButtons = gameLocationsButtons(this.locations, markedOutLocationsCopy)
+                        privateLocationsButtonInteraction.editReply({ components: newButtons })
+                        this.setPrivateMarkedOutLocations(buttonInteraction.user.id, markedOutLocationsCopy)
+                    }
+                    // current buttonInteraction's customId already exists in markedoutLocationsCopy
+                    else {
+                        const newButtons = gameLocationsButtons(this.locations, testArr) // Use testArr as the new marked out locations instead (unmarking the button from current buttonInteraction)
+                        privateLocationsButtonInteraction.editReply({ components: newButtons })
+                        this.setPrivateMarkedOutLocations(buttonInteraction.user.id, testArr)
+                    }
+                }
+            } else { console.log(buttonInteraction.customId, "custom Button ID") }
+        })
     }
 }
 
 export default Game
+export { GameLocations, GameLocationInterface }
