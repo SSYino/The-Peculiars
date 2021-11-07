@@ -125,11 +125,12 @@ export default async (interaction: CommandInteraction, client: Client) => {
         if (event_interaction.commandName === "begin") {
             const hasGameStarted = game.getCurrentRound()
             if (hasGameStarted) return await event_interaction.reply("The game has already started")
-            else game.startCurrentRound();
-
+            
             const MinimumPlayersNeeded = 3;
             const currentPlayerCount = game.getPlayers()?.size
             if (currentPlayerCount && currentPlayerCount < MinimumPlayersNeeded) return event_interaction.reply(`Cannot Begin Game!\nMinimum of ${MinimumPlayersNeeded} players needed`)
+            
+            game.startCurrentRound();
             
             inviteBox.edit({ components: [giveGameRole("playing")] })
             event_interaction.reply(`${event_interaction.user.username} started the game`);
