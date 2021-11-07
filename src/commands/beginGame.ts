@@ -12,7 +12,7 @@ export default async (inviteMessage: Message, gameInteraction: CommandInteractio
     // Update invite message
     const oldEmbed = (await inviteMessage.fetch()).embeds[0]
     const newEmbed = new MessageEmbed(oldEmbed)
-    const [fieldPlayerCount, fieldRound, fieldGameStatus] = newEmbed.fields
+    const [fieldPlayerCount,, fieldGameStatus] = newEmbed.fields
     const currentPlayerCount = fieldPlayerCount.value.match(/^\d+/)![0];
     
     fieldPlayerCount.name = "**Playing**";
@@ -20,7 +20,7 @@ export default async (inviteMessage: Message, gameInteraction: CommandInteractio
     fieldGameStatus.value = "In Progress";
 
     inviteMessage.edit({ embeds: [newEmbed] })
-
+    
     // Disable players sending messages
     gameChannel.permissionOverwrites.edit(playerRole, { SEND_MESSAGES: false });
 
@@ -29,16 +29,16 @@ export default async (inviteMessage: Message, gameInteraction: CommandInteractio
 
     // Ready Button Collector
     const filter: CollectorFilter<[MessageComponentInteraction]> = (i): boolean => {
-        return i.isButton() && i.customId === 'ready'
+        return i.isButton();
     }
-    const readyButtonCollector = gameInteraction.channel?.createMessageComponentCollector({filter, componentType: "BUTTON"}) as InteractionCollector<ButtonInteraction>
+    const buttonCollector = gameInteraction.channel?.createMessageComponentCollector({filter, componentType: "BUTTON"}) as InteractionCollector<ButtonInteraction>
 
     // Get Game instance
     const game = Game.get(gameInteraction.guildId!);
     if (!game) return gameInteraction.channel?.send("Error: Could not find game instance on the current guild");
     
     // Start Game
-    game.start(readyButtonCollector, readyEmbed, readyMessage as Message)
+    game.start(buttonCollector, readyEmbed, readyMessage as Message, inviteMessage)
     // game.on("endRound", //update round in invite box)
     /*
     everyone pressed ready

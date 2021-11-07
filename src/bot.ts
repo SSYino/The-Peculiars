@@ -1,6 +1,6 @@
 require("dotenv").config();
 // const { PrismaClient } = require('@prisma/client')
-import { Client, Intents, GuildMember } from 'discord.js';
+import { Client, Intents } from 'discord.js';
 import runCommands from './runCommands';
 import SlashCommandEvent from './providers/events/SlashCommandEvent'
 import temp from './utils/temp';
@@ -45,17 +45,16 @@ client.on('messageCreate', async (message) => {
         // temp func to avoid getting limited daily by doing redeploy
         await temp(message, client);
     }
-
 })
 
 client.on('interactionCreate', (interaction) => {
     if (!interaction.isCommand() || !interaction.guildId) return;
-
+    
     if (['begin', 'end'].includes(interaction.commandName)) {
         SlashCommandEvent.emitter.emit("gameInteraction", interaction);
         return;
     }
-    else if (interaction.commandName === 'ping') { interaction.reply('Pong!'); return}
+    else if (interaction.commandName === 'ping') { interaction.reply('Pong!'); return }
 
     runCommands.commandInteractions(interaction, client);
 })
