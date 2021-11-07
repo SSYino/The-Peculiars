@@ -1,9 +1,9 @@
 import { MessageActionRow, MessageButton } from "discord.js"
 
-export default ((state: ("waiting" | "playing" | "ended")) : MessageActionRow => {
+export default ((gameState: ("waiting" | "playing" | "ended")) : MessageActionRow => {
     let button = (component: MessageButton) => new MessageActionRow().addComponents(component);
 
-    switch (state) {
+    switch (gameState) {
         case "waiting":
             return button(new MessageButton()
                 .setCustomId("gameRole")
