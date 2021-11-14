@@ -11,9 +11,9 @@ export default ((state: ("waiting" | "started")): MessageActionRow => {
                 .setStyle("PRIMARY"))
         case "started":
             return button(new MessageButton()
-            .setCustomId("ready")
-            .setLabel("Good Luck!")
-            .setStyle("SUCCESS")
-            .setDisabled(true))
+                .setCustomId("ready")
+                .setLabel("Good Luck!")
+                .setStyle("SUCCESS")
+                .setDisabled(true))
     }
 })
