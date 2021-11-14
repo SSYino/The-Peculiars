@@ -1,6 +1,6 @@
 import { MessageEmbed } from "discord.js";
 
-export default new MessageEmbed()
+export default () => new MessageEmbed()
     .setColor("BLUE")
     .setTitle("PLAY THE PECULIARS")
     // .setAuthor("Anonymous", "https://cdn.discordapp.com/attachments/878123202621108264/901836949084590100/unknown.png")
@@ -12,5 +12,5 @@ export default new MessageEmbed()
         {name: "**Game Status**", value: "Idle"}
     ])
     // .setImage("")
-    .setTimestamp()
+    .setTimestamp(Date.now())
     .setFooter(`Spy Game By Nino`, "https://cdn.discordapp.com/attachments/878123202621108264/901836949084590100/unknown.png") // Change Icon URL to later be provided from Discord User
