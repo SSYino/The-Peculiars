@@ -19,12 +19,7 @@ export default async (msg: any, client: any): Promise<void> => {
         new SlashCommandBuilder()
             .setName("end")
             .setDescription("End the spy game \"The Peculiars\"")
-            .setDefaultPermission(false),
-
-        new SlashCommandBuilder()
-            .setName("ping")
-            .setDescription("Pong")
-            .setDefaultPermission(true)
+            .setDefaultPermission(false)
     ]);
     await msg.reply("🥷 | Deployed");
 }

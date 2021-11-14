@@ -54,7 +54,6 @@ client.on('interactionCreate', (interaction) => {
         SlashCommandEvent.emitter.emit("gameInteraction", interaction);
         return;
     }
-    else if (interaction.commandName === 'ping') { interaction.reply('Pong!'); return }
 
     runCommands.commandInteractions(interaction, client);
 })
