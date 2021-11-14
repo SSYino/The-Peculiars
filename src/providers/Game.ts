@@ -372,9 +372,6 @@ class Game {
                         }
                     })
 
-                    // Disable select menus
-                    // selectMenuInteractions.forEach(interactions => interactions.interaction.update({ components: [spyLocationSelectMenu(this.locations, true)] }))
-
                     buttonInteraction.update({ content: "You may now dismiss this message ( bottom left )", components: [] })
 
                     buttonInteraction.channel?.send(`The Spy guessed that the location was **"${guess}"**`) // TODO | Change this to an embed
@@ -385,23 +382,16 @@ class Game {
 
                     if (currentRound.location === guess) {
                         // Spy won the game
-                        // update current round info
-                        // push current round to rounds
-                        // Clear current round info and start new round
 
                         const round = this.setCurrentRound(currentRound.roundNumber, guess, currentRound.players, currentRound.spy, "Spy")
                         this.pushToRounds(round);
                         this._currentRound = null;
 
-                        // Send Spy won message embed with button to start next round (emit begin event)
                         const embed = victoryEmbed("Spy", { location: guess, playerCount: currentRound.players.size, spy: currentRound.spy })
                         buttonInteraction.channel?.send({ embeds: [embed], components: [startNewRoundAndEndGameButton] })
                     }
                     else {
                         // Spy lost the game
-                        // update current round info
-                        // push current round to rounds
-                        // Clear current round info and start new round
 
                         const round = this.setCurrentRound(currentRound.roundNumber, currentRound.location, currentRound.players, currentRound.spy, "The Innocents")
                         this.pushToRounds(round);
@@ -452,16 +442,8 @@ class Game {
             const player = this._players?.get(selectMenuInteraction.user.id);
             if (!player) return selectMenuInteraction.reply("Error: Unable to retrieve the spy's player information");
 
-            // const showJobInteraction = player.playerData.showJobButtonInteraction
-            // if (!showJobInteraction) return selectMenuInteraction.reply("Error: The spy's showJobButtonInteraction in playerData is undefined")
-
-            // showJobInteraction.editReply({ components: [spyLocationSelectMenu(this.locations, true)] })
             let selectMenuInteractions = player.playerData.spySelectMenuInteractions;
             if (!selectMenuInteractions) player.playerData.spySelectMenuInteractions = [];
-
-            // if (selectMenuInteractions.some(interactions => interactions.guess === selectMenuInteraction.values[0])) {
-            //     return selectMenuInteraction.reply({ ephemeral: true, content: "You already have a menu for that location open!" })
-            // }
 
             const locationSelected = selectMenuInteraction.values[0];
             const yesAndNoButtons = spyLocationConfirmation(locationSelected)
