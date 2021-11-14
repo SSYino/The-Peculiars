@@ -1,10 +1,17 @@
-import { Collection, Snowflake, GuildMember, Guild, InteractionCollector, ButtonInteraction, MessageEmbed, Message, TextChannel } from "discord.js"
+import { Collection, Snowflake, GuildMember, Guild, InteractionCollector, ButtonInteraction, MessageEmbed, Message, TextChannel, SelectMenuInteraction, CollectorFilter, Role } from "discord.js"
 import fs from "fs";
 import readyButton from "../utils/buttons/ready";
 import gameLocationsButtons from "../utils/buttons/gameLocations"
 import gameLocationsEmbed from "../utils/messageEmbeds/gameLocations"
 import gameLocations from "../utils/buttons/gameLocations";
 import showJobAndPrivateLocations from "../utils/buttons/showJobAndPrivateLocations";
+import spyLocationSelectMenu from "../utils/selectMenus/spyLocation";
+import spyLocationConfirmation from "../utils/buttons/spyLocationConfirmation";
+import victoryEmbed from "../utils/messageEmbeds/victory";
+import SlashCommandEvent from "./events/SlashCommandEvent";
+import invite from "../utils/messageEmbeds/invite";
+import giveGameRole from "../utils/buttons/giveGameRole";
+import startNewRoundAndEndGameButton from "../utils/buttons/startNewRoundAndEndGameButton";
 
 type GamePlayers = Collection<Snowflake, { guildMember: GuildMember, playerData: PlayerGameData }>
 type GameLocations = Collection<string, GameLocationInterface>
@@ -29,15 +36,18 @@ interface GameOptionsLocationInterface {
 }
 
 interface RoundInfoInterface {
+    roundNumber: number
     players: GamePlayers
     location: string
     spy: GuildMember
-    winningTeam: "Spy" | "The Employed" | "None"
+    winningTeam: "Spy" | "The Innocents" | "None"
 }
 
 interface PlayerGameDataInterface {
     job: string | null
     privateLocationsButtonInteraction?: ButtonInteraction
+    showJobButtonInteraction?: ButtonInteraction
+    spySelectMenuInteractions?: { interaction: SelectMenuInteraction, guess: string }[]
 }
 
 class Game {
@@ -45,6 +55,8 @@ class Game {
     private _players: GamePlayers | null
     public readonly guild: Guild
     public readonly gameTextChannel: TextChannel
+    public readonly gameRole: Role
+    public readonly inviteMessage: Message
     private _readyPlayers: GamePlayers | null
     private _markedOutLocations: PlayerMarkedOutLocations | null
     private _rounds: GameRounds
@@ -52,10 +64,12 @@ class Game {
 
     private static _instances: Game[] = []
 
-    constructor(guild: Guild, gameChannel: TextChannel) {
+    constructor(guild: Guild, gameChannel: TextChannel, gameRole: Role, inviteMessage: Message) {
         this._players = null;
         this.guild = guild;
         this.gameTextChannel = gameChannel;
+        this.gameRole = gameRole;
+        this.inviteMessage = inviteMessage;
         this._readyPlayers = null;
         this._markedOutLocations = null;
         this._rounds = new Collection<0, {}>();
@@ -139,7 +153,7 @@ class Game {
             const privateLocationsCollection = new Collection<string, CustomButtonID[]>();
             this._markedOutLocations = privateLocationsCollection;
         }
-        
+
         this._markedOutLocations!.set(playerId, markedOutButtons);
     }
 
@@ -156,15 +170,20 @@ class Game {
         return this._currentRound
     }
 
-    public setCurrentRound(location: string, players: GamePlayers, spy: GuildMember, winningTeam: "Spy" | "The Employed" | "None" = "None") {
-        this._currentRound = { location, players, spy, winningTeam };
+    private setCurrentRound(roundNumber: number, location: string, players: GamePlayers, spy: GuildMember, winningTeam: "Spy" | "The Innocents" | "None" = "None"): RoundInfoInterface {
+        this._currentRound = { roundNumber, location, players, spy, winningTeam };
+        return this._currentRound;
     }
 
     public startCurrentRound() {
         this._currentRound = "Starting";
     }
 
-    public start(buttonCollector: InteractionCollector<ButtonInteraction>, readyEmbed: (state: ("waiting" | "started"), currentPlayers?: number, maxPlayers?: number) => MessageEmbed, readyMessage: Message, inviteMessage: Message): void {
+    private pushToRounds(round: RoundInfoInterface) {
+        this._rounds.set(round.roundNumber, round)
+    }
+
+    public start(buttonCollector: InteractionCollector<ButtonInteraction>, selectMenuCollector: InteractionCollector<SelectMenuInteraction>, readyEmbed: (state: ("waiting" | "started"), currentPlayers?: number, maxPlayers?: number) => MessageEmbed, readyMessage: Message, inviteMessage: Message): void {
         const randomizeLocationsAndJobs = (): boolean => {
             // Randomize Location
             const location = this.locations.random();
@@ -189,7 +208,8 @@ class Game {
                 }
             })
 
-            this.setCurrentRound(location.name, this._players, spy.guildMember)
+            const latestRound = this._rounds.lastKey()!;
+            this.setCurrentRound(latestRound + 1, location.name, this._players, spy.guildMember)
 
             return true
         }
@@ -220,12 +240,13 @@ class Game {
                     const newEmbed = new MessageEmbed(oldEmbed)
                     let [, round] = newEmbed.fields;
                     round.value = `${parseInt(round.value) + 1}`
-                    inviteMessage.edit({embeds: [newEmbed]})
+                    inviteMessage.edit({ embeds: [newEmbed] })
 
                     // Start Sending Locations
                     readyMessage.channel.send({ embeds: [gameLocationsEmbed(this.locations)], components: [showJobAndPrivateLocations] })
                 }
             }
+
             else if (buttonInteraction.customId === "showJob") {
                 if (this._currentRound === "Starting") return buttonInteraction.reply("Error: Round Status is \"Starting\"");
                 const location = this._currentRound?.location;
@@ -235,9 +256,13 @@ class Game {
                 if (job === null) return buttonInteraction.reply("Error: User did not recieve a job")
                 else if (job === undefined) return buttonInteraction.reply("Error: Could not find user in GamePlayers")
 
-                if (job === "Spy") buttonInteraction.reply({ content: `You are a **Spy**\nGuess the location correctly to win the game`, ephemeral: true/*, components: "Add spy guess location button here"*/ })
-                else buttonInteraction.reply({ content: `We are currently at the **${location}**\nYou are a **${job}**`, ephemeral: true })
+                if (job === "Spy") {
+                    const selectMenu = spyLocationSelectMenu(this.locations);
+                    buttonInteraction.reply({ content: `You are a **Spy**\nGuess the location correctly to win the game`, ephemeral: true, components: [selectMenu] })
+                }
+                else buttonInteraction.reply({ content: `We are currently at the **${location}**\nYou are a/an **${job}**`, ephemeral: true })
             }
+
             else if (buttonInteraction.customId === "showPrivateLocations") {
                 const player = this._players?.get(buttonInteraction.user.id)
                 const markedOutButtons = this.getPrivateMarkedOutLocations(buttonInteraction.user.id);
@@ -248,6 +273,7 @@ class Game {
 
                 player.playerData.privateLocationsButtonInteraction = buttonInteraction;
             }
+
             else if (buttonInteraction.customId.startsWith("location")) {
                 const player = this._players?.get(buttonInteraction.user.id);
                 if (!player) return buttonInteraction.reply("Error: Could not find player in GamePlayers");
@@ -258,7 +284,7 @@ class Game {
                 const playerPrivateMarkedOutLocations = this.getPrivateMarkedOutLocations(buttonInteraction.user.id);
 
                 if (!playerPrivateMarkedOutLocations) {
-                    await buttonInteraction.reply(".");
+                    await buttonInteraction.reply("\u200b ");
                     buttonInteraction.deleteReply();
                     const newButtons = gameLocationsButtons(this.locations, [buttonInteraction.customId]);
                     this.setPrivateMarkedOutLocations(buttonInteraction.user.id, [buttonInteraction.customId]);
@@ -266,7 +292,7 @@ class Game {
                     privateLocationsButtonInteraction.editReply({ components: newButtons });
                 }
                 else {
-                    await buttonInteraction.reply(".");
+                    await buttonInteraction.reply("\u200b ");
                     buttonInteraction.deleteReply();
                     const markedOutLocationsCopy = playerPrivateMarkedOutLocations.slice();
                     const testArr = markedOutLocationsCopy.filter(ID => ID !== buttonInteraction.customId)
@@ -285,7 +311,164 @@ class Game {
                         this.setPrivateMarkedOutLocations(buttonInteraction.user.id, testArr)
                     }
                 }
+            }
+
+            else if (buttonInteraction.customId.startsWith("confirmation")) {
+                const player = this._players?.get(buttonInteraction.user.id);
+                if (!player) return buttonInteraction.reply("Error: Unable to retrieve the spy's player information");
+
+                const selectMenuInteractions = player.playerData.spySelectMenuInteractions
+                if (!selectMenuInteractions) return buttonInteraction.reply("Error: The spy's spySelectMenuInteraction in playerData is undefined");
+
+                const guess = buttonInteraction.customId.replace(/^(confirmation(No|Yes))(.+)/, "$3");
+                const thisSelectMenuInteraction = selectMenuInteractions.find(interactions => interactions.guess === guess)
+                if (!thisSelectMenuInteraction) return buttonInteraction.reply("Error: Could not find SelectMenuInteraction")
+
+                if (buttonInteraction.customId.startsWith('confirmationNo')) {
+                    thisSelectMenuInteraction.interaction.editReply({ content: "You may now dismiss this message ( bottom left )", components: [] })
+                }
+                else if (buttonInteraction.customId.startsWith('confirmationYes')) {
+                    buttonCollector.stop()
+                    selectMenuCollector.stop()
+
+                    const nextRoundButtonFilter: CollectorFilter<[ButtonInteraction]> = (i): boolean => {
+                        return i.isButton() && (i.customId === "startNewRound" || i.customId === "endGame")
+                    }
+                    const gameButtonCollector = buttonInteraction.channel!.createMessageComponentCollector({ filter: nextRoundButtonFilter, componentType: "BUTTON", max: 1 })
+                    const gameTextChannel = this.gameTextChannel;
+                    const inviteMessage = await this.inviteMessage.fetch();
+                    const commands = buttonInteraction.guild!.commands.cache;
+
+                    const beginCommand = commands.find(command => command.name == "begin");
+                    if (!beginCommand) return buttonInteraction.reply("Error: Could not find the \"begin\" slash command")
+
+                    gameButtonCollector.on("collect", (buttonInteraction) => {
+                        SlashCommandEvent.emitter.emit("gameInteraction", buttonInteraction)
+
+                        if (buttonInteraction.customId === "startNewRound") {
+                            beginCommand.permissions.set({
+                                permissions: [
+                                    {
+                                        id: this.gameRole.id,
+                                        type: "ROLE",
+                                        permission: false
+                                    }
+                                ]
+                            })
+                        }
+                        else if (buttonInteraction.customId === "endGame") {
+                            const endCommand = commands.find(command => command.name === "end")
+                            if (!endCommand) return buttonInteraction.reply("Error: Could not find the \"end\" slash command")
+
+                            endCommand.permissions.set({
+                                permissions: [
+                                    {
+                                        id: this.gameRole.id,
+                                        type: "ROLE",
+                                        permission: false
+                                    }
+                                ]
+                            })
+                        }
+                    })
+
+                    // Disable select menus
+                    // selectMenuInteractions.forEach(interactions => interactions.interaction.update({ components: [spyLocationSelectMenu(this.locations, true)] }))
+
+                    buttonInteraction.update({ content: "You may now dismiss this message ( bottom left )", components: [] })
+
+                    buttonInteraction.channel?.send(`The Spy guessed that the location was **"${guess}"**`) // TODO | Change this to an embed
+
+                    const currentRound = this._currentRound
+                    if (currentRound === "Starting") return buttonInteraction.channel?.send("Error: Current round status is \"Starting\"") as void
+                    if (!currentRound) return buttonInteraction.channel?.send("Error: Current round property in Game class is null") as void
+
+                    if (currentRound.location === guess) {
+                        // Spy won the game
+                        // update current round info
+                        // push current round to rounds
+                        // Clear current round info and start new round
+
+                        const round = this.setCurrentRound(currentRound.roundNumber, guess, currentRound.players, currentRound.spy, "Spy")
+                        this.pushToRounds(round);
+                        this._currentRound = null;
+
+                        // Send Spy won message embed with button to start next round (emit begin event)
+                        const embed = victoryEmbed("Spy", { location: guess, playerCount: currentRound.players.size, spy: currentRound.spy })
+                        buttonInteraction.channel?.send({ embeds: [embed], components: [startNewRoundAndEndGameButton] })
+                    }
+                    else {
+                        // Spy lost the game
+                        // update current round info
+                        // push current round to rounds
+                        // Clear current round info and start new round
+
+                        const round = this.setCurrentRound(currentRound.roundNumber, currentRound.location, currentRound.players, currentRound.spy, "The Innocents")
+                        this.pushToRounds(round);
+                        this._currentRound = null;
+
+                        const embed = victoryEmbed("The Innocents", { location: currentRound.location, playerCount: currentRound.players.size, spy: currentRound.spy })
+                        buttonInteraction.channel?.send({ embeds: [embed], components: [startNewRoundAndEndGameButton] })
+                    }
+
+                    await beginCommand.permissions.set({
+                        permissions: [
+                            {
+                                id: this.gameRole.id,
+                                type: "ROLE",
+                                permission: true
+                            }
+                        ]
+                    })
+
+                    this._readyPlayers = null
+                    this._markedOutLocations = null
+
+                    gameTextChannel.permissionOverwrites.edit(this.gameRole, { SEND_MESSAGES: true })
+
+                    const oldEmbed = inviteMessage.embeds[0];
+                    const [playerCount, roundNumber] = oldEmbed.fields
+                    const newEmbed = invite();
+                    const newInviteMessageEmbedFields = newEmbed.fields.map(field => {
+                        if (field.name === "**In Lobby**") {
+                            field.value = `${playerCount.value} / 10`
+                            return field
+                        }
+                        else if (field.name === "**Round**") {
+                            field.value = roundNumber.value
+                            return field
+                        }
+                        else return field
+                    })
+
+                    newEmbed.fields = newInviteMessageEmbedFields;
+
+                    inviteMessage.edit({ embeds: [newEmbed], components: [giveGameRole("waiting")] })
+                }
             } else { console.log(buttonInteraction.customId, "custom Button ID") }
+        })
+
+        selectMenuCollector.on("collect", async (selectMenuInteraction) => {
+            const player = this._players?.get(selectMenuInteraction.user.id);
+            if (!player) return selectMenuInteraction.reply("Error: Unable to retrieve the spy's player information");
+
+            // const showJobInteraction = player.playerData.showJobButtonInteraction
+            // if (!showJobInteraction) return selectMenuInteraction.reply("Error: The spy's showJobButtonInteraction in playerData is undefined")
+
+            // showJobInteraction.editReply({ components: [spyLocationSelectMenu(this.locations, true)] })
+            let selectMenuInteractions = player.playerData.spySelectMenuInteractions;
+            if (!selectMenuInteractions) player.playerData.spySelectMenuInteractions = [];
+
+            // if (selectMenuInteractions.some(interactions => interactions.guess === selectMenuInteraction.values[0])) {
+            //     return selectMenuInteraction.reply({ ephemeral: true, content: "You already have a menu for that location open!" })
+            // }
+
+            const locationSelected = selectMenuInteraction.values[0];
+            const yesAndNoButtons = spyLocationConfirmation(locationSelected)
+
+            player.playerData.spySelectMenuInteractions!.push({ interaction: selectMenuInteraction, guess: locationSelected });
+
+            selectMenuInteraction.reply({ ephemeral: true, content: `Are you sure the location is **${locationSelected}**?\nYou have only **1** chance!`, components: [yesAndNoButtons] })
         })
     }
 }
