@@ -1,8 +1,8 @@
-import { ApplicationCommand, Collection, CommandInteraction, Message, MessageAttachment, MessageEmbed, Role, TextChannel } from "discord.js";
+import { ApplicationCommand, ButtonInteraction, Collection, CommandInteraction, Message, MessageAttachment, MessageEmbed, Role, TextChannel } from "discord.js";
 import { promisify } from "util";
 import Game from "../providers/Game";
 
-export default async (inviteMessage: Message, event_interaction: CommandInteraction, slashCommands: Collection<string, ApplicationCommand>, everyoneRole: Role, playerRole: Role, gameChannel: TextChannel) => {
+export default async (inviteMessage: Message, event_interaction: CommandInteraction | ButtonInteraction, slashCommands: Collection<string, ApplicationCommand>, everyoneRole: Role, playerRole: Role, gameChannel: TextChannel) => {
     // Lock "begin" and "end" slash commands from being used
     for (const command of slashCommands) {
         if (command[1].name === 'begin' || command[1].name === 'end') {
