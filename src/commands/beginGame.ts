@@ -43,17 +43,8 @@ export default async (inviteMessage: Message, gameInteraction: CommandInteractio
 
     // Start Game
     game.start(buttonCollector, selectMenuCollector, readyEmbed, readyMessage as Message, inviteMessage)
-    // game.on("endRound", //update round in invite box)
+    
     /*
-    everyone pressed ready
-    got interaction from every player
-    send messages of all locations available
-    random location
-    random a player to become spy
-    other players except for spy gets sent the random location from earlier
-    the non spy players gets assigned a randomized job from that location
-    send message (ephemeral) to spy to inform him of his role and his duties
-    send message (ephemeral) to other players to inform them of the location, their jobs and their duty
     randomize the players to form a sequence of players (a queue)
     send a message to the channel to tell who the first person to ask questions is
     create a form for the person asking to be able to input a player to answer the question
@@ -61,8 +52,5 @@ export default async (inviteMessage: Message, gameInteraction: CommandInteractio
     also send a message to the channel to inform everyone who is being asked
     after question has been answered (and buttons pressed), remove the buttons, and edit the message of the person asking back to normal (location and job message) (can stack embeds prior for easier removal)
     choose to next person to ask questions
-    the spy always has an input form to answer the location
-    if the spy answers correctly, end the round immediately, spy wins, otherwise, end the round, spy loses
-    Show the avatar and name of the user who won
     */
 }
