@@ -4,6 +4,7 @@ import { Client, Intents } from 'discord.js';
 import runCommands from './runCommands';
 import SlashCommandEvent from './providers/events/SlashCommandEvent'
 import temp from './utils/temp';
+import checkGameOptions from './checkGameOptions';
 
 // const prisma = new PrismaClient()
 const client = new Client({
@@ -19,7 +20,7 @@ client.on('ready', async () => {
     client.user!.setActivity('for a Spy', { type: 'WATCHING' })
 
     // Check gameOptions.json
-    // gameOptionsCheck()
+    checkGameOptions()
 
     // Send Message To Channel
     // client.channels.cache.get("886996891865333811").send('Yeah fuck you Knyu');
