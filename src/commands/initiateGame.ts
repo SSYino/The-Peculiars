@@ -1,4 +1,4 @@
-import { ApplicationCommand, ButtonInteraction, Client, Collection, CommandInteraction, GuildMemberRoleManager, MessageEmbed } from "discord.js";
+import { ApplicationCommand, ButtonInteraction, Client, Collection, CommandInteraction, GuildMemberRoleManager } from "discord.js";
 import SlashCommandEvent from '../providers/events/SlashCommandEvent'
 import inviteMessage from "../utils/messageEmbeds/invite";
 import giveGameRole from "../utils/buttons/giveGameRole";
@@ -7,6 +7,7 @@ import endGame from "./endGame";
 import updatePlayerCount from "./updatePlayerCount";
 import Game from "../providers/Game";
 import redirectToGameChannel from "../utils/buttons/redirectToGameChannel";
+import EventEmitter from "events";
 
 export default async (interaction: CommandInteraction, client: Client) => {
     await interaction.reply("⏳ | Loading Game | Please Be Patient") // TODO: later change this reply to be an embed
@@ -101,7 +102,10 @@ export default async (interaction: CommandInteraction, client: Client) => {
     function filter(i: any) {
         return (i.customId === 'gameRole')
     }
-    const buttonCollector = interaction.channel?.createMessageComponentCollector({ filter, componentType: "BUTTON", dispose: true });
+    const buttonCollector = interaction.channel?.createMessageComponentCollector({ filter, componentType: "BUTTON" });
+
+    let Lock = new EventEmitter();
+    let updatingPlayerCount = false;
 
     buttonCollector?.on("collect", async i => {
         const memberRoles = (i.member?.roles as GuildMemberRoleManager).cache;
@@ -113,52 +117,74 @@ export default async (interaction: CommandInteraction, client: Client) => {
         // TODO: ADD EMBEDS FOR THIS MESSAGE
         i.reply({ ephemeral: true, content: "Click here to get redirected to the game channel", components: [redirectToGameChannel(gameChannel.guild.id, gameChannel.id)] })
 
-        const inviteMessage = await inviteBox.fetch();
-        const updated = await updatePlayerCount(inviteMessage.embeds[0] as MessageEmbed, inviteMessage, i);
+        if (updatingPlayerCount) await new Promise(res => Lock.once("unlocked", res))
+
+        updatingPlayerCount = true
+        const updated = await updatePlayerCount(inviteBox, i);
         if (!updated) i.channel?.send("Error: Failed to update playerCount")
+        updatingPlayerCount = false
+        Lock.emit("unlocked");
     })
 
     // Create Event Listener for game commands in the game text channel
     SlashCommandEvent.emitter.on("gameInteraction", async (event_interaction: CommandInteraction | ButtonInteraction) => {
-        if (event_interaction.channelId !== gameChannel.id) return event_interaction?.reply("This isn't the game channel!!... baka!");
+        if (event_interaction.channelId !== gameChannel.id) return event_interaction.reply("This isn't the game channel!!... baka!");
 
-        const begin = async () => {
+        const begin = async (interactionMethod: "SlashCommand" | "Button") => {
             const hasGameStarted = game.getCurrentRound()
-            if (hasGameStarted) return await event_interaction.reply("The game has already started")
+            if (hasGameStarted) {
+                if (interactionMethod === "SlashCommand") {
+                    return event_interaction.reply("The game has already started")
+                }
+                else return event_interaction.followUp("The game has already started")
+            }
 
             const MinimumPlayersNeeded = 3;
             const currentPlayerCount = game.getPlayers()?.size;
-            if (currentPlayerCount && currentPlayerCount < MinimumPlayersNeeded) return event_interaction.reply(`Cannot Begin Game!\nMinimum of ${MinimumPlayersNeeded} players needed`)
+            if (currentPlayerCount && currentPlayerCount < MinimumPlayersNeeded) {
+                if (interactionMethod === "SlashCommand") {
+                    return event_interaction.reply(`Cannot Begin Game!\nMinimum of ${MinimumPlayersNeeded} players needed`)
+                }
+                else return event_interaction.followUp(`Cannot Begin Game!\nMinimum of ${MinimumPlayersNeeded} players needed`)
+            }
 
             game.startCurrentRound();
 
             inviteBox.edit({ components: [giveGameRole("playing")] })
-            event_interaction.reply(`${event_interaction.user.username} started the game`);
+            if (interactionMethod === "SlashCommand") {
+                event_interaction.reply(`${event_interaction.user.username} started the game`);
+            }
+            else event_interaction.followUp(`${event_interaction.user.username} started the game`);
 
             // Start Game
             beginGame(inviteBox, event_interaction, playerRole, gameChannel)
         }
-        const end = async () => {
+        const end = async (interactionMethod: "SlashCommand" | "Button") => {
             if (!slashCommands || slashCommands.size === 0) return event_interaction.reply("Error: No Slash Commands found")
 
             inviteBox.edit({ components: [giveGameRole("ended")] })
-            event_interaction.reply(`${event_interaction.user.username} ended the game`);
             buttonCollector?.stop();
+
+            if (interactionMethod === "SlashCommand") {
+                event_interaction.reply(`${event_interaction.user.username} ended the game`);
+            }
+            else event_interaction.followUp(`${event_interaction.user.username} ended the game`);
 
             // End Game
             await endGame(inviteBox, event_interaction, slashCommands, everyoneRole, playerRole, gameChannel)
             SlashCommandEvent.emitter.removeAllListeners();
+            Lock.removeAllListeners()
         }
 
-        
+
         if (event_interaction.isCommand()) {
-            if (event_interaction.commandName === "begin") begin();
-            else if (event_interaction.commandName === "end") end();
+            if (event_interaction.commandName === "begin") begin("SlashCommand");
+            else if (event_interaction.commandName === "end") end("SlashCommand");
             else event_interaction.reply(`${event_interaction.user.username} ran **${event_interaction.commandName}**`);
         }
         else if (event_interaction.isButton()) {
-            if (event_interaction.customId === "startNewRound") begin();
-            else if (event_interaction.customId === "endGame") end()
+            if (event_interaction.customId === "startNewRound") begin("Button");
+            else if (event_interaction.customId === "endGame") end("Button")
         }
     })
 
