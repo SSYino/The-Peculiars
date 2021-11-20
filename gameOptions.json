@@ -1,202 +1,355 @@
 {
     "locations": {
-        "loc1": {
+        "Airport": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Pilot",
+                "Air Hostess",
+                "Co Pilot",
+                "Engineer",
+                "Millionaire",
+                "Arsonist",
+                "Student",
+                "Business Man",
+                "Muslim Bomber"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc2": {
+        "Bank": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Bank Teller",
+                "Security Guard",
+                "Guard Dog",
+                "Janitor",
+                "Visitor"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc3": {
+        "Beach": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Nude Man",
+                "Nude Women",
+                "Lifeguard",
+                "Turtle"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc4": {
+        "Movie Theater": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Popcorn Seller",
+                "Ticket Staff",
+                "Janitor",
+                "Security Guard"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc5": {
+        "Casino": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Janitor",
+                "Billionaire",
+                "Millionaire",
+                "Security Guard",
+                "Poker Staff",
+                "Arms Dealer",
+                "Mafia Leader",
+                "Roulette Staff",
+                "Drug Addict",
+                "Bartender",
+                "Pablo Escobar"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc6": {
+        "Church": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Pope",
+                "Visitor",
+                "Dead Body",
+                "Priest",
+                "Pastor",
+                "Jesus",
+                "Buddha"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc7": {
+        "Spa": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Porn Star",
+                "Visitor",
+                "Spa Owner",
+                "Perverted Old Man"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc8": {
+        "Shopping Mall": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Security Guard",
+                "Guard Dog",
+                "Mall Owner",
+                "Visitor",
+                "Mafia Leader",
+                "Gamer",
+                "Olympic Swimmer",
+                "Jewelry Shop Owner"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc9": {
+        "Hospital": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Nurse",
+                "Doctor",
+                "Patient",
+                "Dead Body",
+                "Drug Addict",
+                "Perverted Old Man",
+                "Security Guard",
+                "Surgeon",
+                "Porn Star",
+                "Janitor"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc10": {
+        "Hotel": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Hotel Owner",
+                "Lobby Staff",
+                "Security Guard",
+                "Guard Dog",
+                "Janitor",
+                "Divorced Man",
+                "Chef",
+                "Bartender",
+                "Billionaire",
+                "Gamer",
+                "waiter"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc11": {
+        "Movie Studio": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Actor",
+                "Actress",
+                "Movie Director",
+                "Camera Director",
+                "Sound Director",
+                "Lighting Director",
+                "Video Editor",
+                "Sound Designer",
+                "Props Director",
+                "Voice Actor",
+                "Visitor",
+                "Security Guard"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc12": {
+        "Train Station": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Railway Conductor",
+                "Foreigner",
+                "Visitor",
+                "Security Guard",
+                "Soldier",
+                "Army General",
+                "Ticket Examiner",
+                "Train Fireman"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc13": {
+        "Pirate Ship": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Pirate",
+                "Pirate Captain",
+                "Octopus",
+                "Prisoner",
+                "Monkey",
+                "Parrot",
+                "Helmsman"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc14": {
+        "Police Station": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Police",
+                "Police Chief",
+                "Police Station Owner",
+                "Prisoner",
+                "Thief",
+                "Robber",
+                "Most Wanted Criminal",
+                "Man Being Interrogated",
+                "Prime minister of Thailand",
+                "Pablo Escobar"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc15": {
+        "Restaurant": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Chef",
+                "Waiter",
+                "Waitress",
+                "Security Guard",
+                "Cashier Staff",
+                "Janitor",
+                "Quality Assurance Team",
+                "Plumber",
+                "Electrician"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc16": {
+        "School": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Teacher",
+                "Porn Star",
+                "Student",
+                "Janitor",
+                "Well Known Profressor",
+                "Lunch Lady",
+                "Security Guard",
+                "Parent",
+                "Prime minister of Thailand",
+                "School Nurse",
+                "Plumber",
+                "Electrician",
+                "IT Staff"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc17": {
+        "Space Station": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Computer Programmer",
+                "Elon Musk",
+                "Astronaut",
+                "Electrician",
+                "Jeff Bezos",
+                "Engineer",
+                "Millionaire",
+                "Billionaire",
+                "Pilot",
+                "Co Pilot"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc18": {
+        "Submarine": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Scuba Diver",
+                "Prime minister of Thailand",
+                "Plumber",
+                "Tourist",
+                "Foreigner",
+                "Electrician",
+                "Soldier",
+                "Security Guard",
+                "Army General",
+                "Helmsman"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc19": {
+        "Supermarket": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Old Lady Shopping",
+                "Janitor",
+                "Cashier Staff",
+                "Plumber",
+                "Electrician",
+                "Supermarket Owner",
+                "Supermarket Manager",
+                "Underpaid Mascot",
+                "Average Shopper",
+                "Security Guard",
+                "Student",
+                "Office Worker"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc20": {
+        "University": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Professor",
+                "Student",
+                "Electrician",
+                "Plumber",
+                "Janitor",
+                "Elon Musk",
+                "Jeff Bezos",
+                "Admired Alumni",
+                "Entrepreneur",
+                "Security Guard",
+                "Guard Dog",
+                "Gamer",
+                "Most Wanted Criminal",
+                "Research Staff",
+                "Chef",
+                "Librarian",
+                "Nurse",
+                "Doctor",
+                "PhD Graduate"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc21": {
+        "Deserted Island": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Monkey",
+                "Half Man Half Horse",
+                "Deserted Man",
+                "Deserted Woman",
+                "Giraffe",
+                "Astronaut In The Ocean",
+                "Actor",
+                "Pirate",
+                "Pirate Captain",
+                "Castaway"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc22": {
+        "Underground Mine": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Miner",
+                "Creeper",
+                "Visitor",
+                "Police",
+                "Geologist",
+                "Scientist",
+                "Devoted Researcher",
+                "Mine Manager",
+                "Thief",
+                "Most Wanted Criminal",
+                "Operations Manager"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc23": {
+        "Heaven": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Angel",
+                "Zeus",
+                "Poseidon",
+                "Hercules",
+                "Cupid",
+                "Dead Man",
+                "GOD",
+                "Jesus",
+                "Buddha",
+                "Titan",
+                "Souls",
+                "Saints"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc24": {
+        "Hell": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Devil",
+                "Prime minister of Thailand",
+                "Demon",
+                "Satan",
+                "Person paying for their sins"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         },
-        "loc25": {
+        "Rice Field": {
             "jobs": [
-                "job1",
-                "job2",
-                "job3"
+                "Hoe",
+                "Farmer",
+                "Tractor Driver",
+                "Student",
+                "Crow",
+                "Scarecrow",
+                "Crops Researcher"
             ],
             "imageRelativePath": "link to job image or to assets folder"
         }
