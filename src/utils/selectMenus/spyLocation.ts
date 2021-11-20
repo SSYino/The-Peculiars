@@ -3,11 +3,6 @@ import { GameLocations } from "../../providers/Game";
 
 export default (locations: GameLocations, disable: boolean = false): MessageActionRow => {
     const optionsArr: MessageSelectOptionData[] = []
-    const makeCamelCase = (string: string) => {
-        return string
-            .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => index === 0 ? word.toLowerCase() : word.toUpperCase())
-            .replace(/\s+/g, '');
-    }
     const alphabeticallySortedLocationName = locations
         .map(location => location.name)
         .sort((a, b) => a.localeCompare(b));
@@ -15,7 +10,7 @@ export default (locations: GameLocations, disable: boolean = false): MessageActi
     alphabeticallySortedLocationName.forEach(locationName => {
         optionsArr.push({
             label: locationName,
-            value: makeCamelCase(locationName),
+            value: locationName,
             emoji: "💠"
         })
     })
