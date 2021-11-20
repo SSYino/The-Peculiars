@@ -5,17 +5,21 @@
   "main": "dist/bot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/bot.js"
+    "start": "tsc && node dist/bot.js",
+    "dev": "ts-node-dev src/bot.ts"
   },
   "keywords": [],
   "author": "Gian Mario Carta",
   "license": "ISC",
   "dependencies": {
+    "@discordjs/builders": "^0.7.0",
     "@prisma/client": "^2.30.3",
+    "@types/node": "^16.11.6",
     "discord.js": "^13.1.0",
     "dotenv": "^10.0.0"
   },
   "devDependencies": {
-    "prisma": "^2.30.3"
+    "prisma": "^2.30.3",
+    "ts-node-dev": "^1.1.8"
   }
 }
