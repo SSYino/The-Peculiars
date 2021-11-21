@@ -8,9 +8,10 @@ import updatePlayerCount from "./updatePlayerCount";
 import Game from "../providers/Game";
 import redirectToGameChannel from "../utils/buttons/redirectToGameChannel";
 import EventEmitter from "events";
+import loadingGame from "../utils/messageEmbeds/loadingGame";
 
 export default async (interaction: CommandInteraction, client: Client) => {
-    await interaction.reply("⏳ | Loading Game | Please Be Patient") // TODO: later change this reply to be an embed
+    await interaction.reply({ embeds: [loadingGame] })
     const clientId = process.env.CLIENT_UUID;
     if (!clientId) return interaction.editReply("Error: Unable to find clientId")
 
@@ -56,7 +57,7 @@ export default async (interaction: CommandInteraction, client: Client) => {
     }
     if (!slashCommands || slashCommands.size === 0) return interaction.editReply("Error: Unable to fetch slash commands");
 
-    interaction.editReply(`${interaction.user.username} started the game`)
+    interaction.editReply({ content: `${interaction.user.username} started the game`, embeds: [] })
 
     // Send invite message to the channel
     // Send button that gives neccassary role to play the game
@@ -109,12 +110,10 @@ export default async (interaction: CommandInteraction, client: Client) => {
 
     buttonCollector?.on("collect", async i => {
         const memberRoles = (i.member?.roles as GuildMemberRoleManager).cache;
-        // TODO: ADD EMBEDS FOR THIS MESSAGE
         if (memberRoles.find(role => role.id === playerRole.id)) return await i.reply({ ephemeral: true, content: "Click here to get redirected to the game channel", components: [redirectToGameChannel(gameChannel.guild.id, gameChannel.id)] });
 
         i.guild?.members.cache.get(i.user.id)?.roles.add(playerRole);
 
-        // TODO: ADD EMBEDS FOR THIS MESSAGE
         i.reply({ ephemeral: true, content: "Click here to get redirected to the game channel", components: [redirectToGameChannel(gameChannel.guild.id, gameChannel.id)] })
 
         if (updatingPlayerCount) await new Promise(res => Lock.once("unlocked", res))
