@@ -17,6 +17,7 @@ import poll from "../utils/buttons/poll";
 import allPlayersSelectMenu from "../utils/selectMenus/allPlayers";
 import voteResults from "../utils/messageEmbeds/voteResults";
 import { promisify } from "util";
+import tieBreaker from "../utils/messageEmbeds/tieBreaker";
 
 type GamePlayers = Collection<Snowflake, GuildMember>
 type ReadyPlayers = Collection<Snowflake, { guildMember: GuildMember, playerData: PlayerGameData }>
@@ -731,8 +732,7 @@ class Game {
                             }
                         })
 
-                        // TODO | Change this to an embed
-                        selectMenuInteraction.channel?.send({ content: "**TIE BREAKER**\nWho do you think is the spy?", components: [allPlayersSelectMenu(tieBreakerPlayers, true)] })
+                        selectMenuInteraction.channel?.send({ embeds: [tieBreaker], components: [allPlayersSelectMenu(tieBreakerPlayers, true)] })
                     }
                 }
             }
