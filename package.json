@@ -1,11 +1,11 @@
 {
   "name": "the-peculiars",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Spy Game implemented from a card game named \"SpyFall\" by Alexandr Ushan",
   "main": "dist/bot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "tsc && node dist/bot.js",
+    "start": "tsc && pm2 start dist/bot.js",
     "dev": "ts-node-dev src/bot.ts"
   },
   "keywords": [],
@@ -19,6 +19,7 @@
     "dotenv": "^10.0.0"
   },
   "devDependencies": {
+    "pm2": "^5.1.2",
     "prisma": "^2.30.3",
     "ts-node-dev": "^1.1.8"
   }
